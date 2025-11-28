@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "密码管家",
+    "slug": "psw-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "platforms": ["ios", "android"],
+    "splash": {
+      "backgroundColor": "#667eea",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.company.psw"
+    },
+    "android": {
+      "package": "com.company.psw",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#667eea"
+      },
+      "permissions": [
+        "android.permission.INTERNET"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-will-be-generated"
+      }
+    }
+  }
+}
