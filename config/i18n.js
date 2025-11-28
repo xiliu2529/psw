@@ -138,7 +138,7 @@ export const translations = {
     
     // ホーム
     home: {
-      title: 'パスワードマネージャー',
+      title: 'パス管',
       welcome: 'こんにちは',
       totalPasswords: '件のパスワード',
       addButton: 'パスワード追加',

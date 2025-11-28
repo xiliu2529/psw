@@ -69,7 +69,7 @@
 
 | 功能 | 中文 | 日语 |
 |-----|------|------|
-| 标题 | 密码管家 | パスワードマネージャー |
+| 标题 | 密码管家 | パス管 |
 | 欢迎 | 你好 | こんにちは |
 | 添加 | 添加密码 | パスワード追加 |
 | 删除 | 删除 | 削除 |
@@ -152,7 +152,7 @@ const lang = await AsyncStorage.getItem('app_language');
 const t = (key) => translations[language][key];
 
 // 使用
-<Text>{t('home.title')}</Text>  // 密码管家 或 パスワードマネージャー
+<Text>{t('home.title')}</Text>  // 密码管家 或 パス管
 ```
 
 ---

@@ -5,7 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "splash": {
       "backgroundColor": "#667eea",
       "resizeMode": "contain"
@@ -29,7 +32,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "your-project-id-will-be-generated"
+        "projectId": "1a75cdf4-61a9-4b7b-8b2f-f239432cd4dc"
       }
     }
   }
