@@ -14,6 +14,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { logoutUser, getCurrentUser } from '../services/authService';
 import { addPassword, getUserPasswords, deletePassword, togglePinPassword } from '../services/passwordService';
 import { translations } from '../config/i18n';
@@ -28,6 +29,7 @@ export default function HomeScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [showPassword, setShowPassword] = useState({});
   const [language, setLanguage] = useState('zh'); // 默认中文
+  const [isBiometricSupported, setIsBiometricSupported] = useState(false);
 
   // 加载语言设置
   useEffect(() => {
@@ -37,6 +39,11 @@ export default function HomeScreen({ navigation }) {
   // 加载密码列表
   useEffect(() => {
     loadPasswords();
+  }, []);
+
+  // 检查生物识别支持
+  useEffect(() => {
+    checkBiometricSupport();
   }, []);
 
   const loadLanguage = async () => {
@@ -67,6 +74,37 @@ export default function HomeScreen({ navigation }) {
       value = value?.[k];
     }
     return value || key;
+  };
+
+  const checkBiometricSupport = async () => {
+    try {
+      const compatible = await LocalAuthentication.hasHardwareAsync();
+      const enrolled = await LocalAuthentication.isEnrolledAsync();
+      setIsBiometricSupported(compatible && enrolled);
+    } catch (error) {
+      console.error('检查生物识别支持失败:', error);
+      setIsBiometricSupported(false);
+    }
+  };
+
+  const authenticateWithBiometrics = async () => {
+    try {
+      if (!isBiometricSupported) {
+        return true; // 如果不支持生物识别，直接返回true
+      }
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: language === 'zh' ? '请验证身份以查看密码' : 'パスワードを表示するために認証してください',
+        fallbackLabel: language === 'zh' ? '使用密码' : 'パスワードを使用',
+        cancelLabel: language === 'zh' ? '取消' : 'キャンセル',
+        disableDeviceFallback: false,
+      });
+
+      return result.success;
+    } catch (error) {
+      console.error('生物识别验证失败:', error);
+      return false;
+    }
   };
 
   const loadPasswords = async () => {
@@ -175,11 +213,32 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  const togglePasswordVisibility = (id) => {
-    setShowPassword(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+  const togglePasswordVisibility = async (id) => {
+    const isCurrentlyVisible = showPassword[id];
+    
+    if (!isCurrentlyVisible) {
+      // 如果当前是隐藏状态，要显示密码，需要验证身份
+      const isAuthenticated = await authenticateWithBiometrics();
+      
+      if (isAuthenticated) {
+        setShowPassword(prev => ({
+          ...prev,
+          [id]: !prev[id]
+        }));
+      } else {
+        // 验证失败，不显示密码
+        Alert.alert(
+          t('error'),
+          language === 'zh' ? '身份验证失败，无法查看密码' : '認証に失敗しました。パスワードを表示できません。'
+        );
+      }
+    } else {
+      // 如果当前是显示状态，直接隐藏
+      setShowPassword(prev => ({
+        ...prev,
+        [id]: !prev[id]
+      }));
+    }
   };
 
   const handleCancel = () => {
