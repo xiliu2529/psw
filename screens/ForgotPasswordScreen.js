@@ -9,47 +9,58 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { loginUser } from '../services/authService';
+import { resetPassword } from '../services/authService';
 
-export default function LoginScreen({ navigation }) {
+export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('错误', '请填写邮箱和密码');
+  const handleResetPassword = async () => {
+    if (!email) {
+      Alert.alert('错误', '请输入您的邮箱地址');
+      return;
+    }
+
+    // 简单的邮箱格式验证
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('错误', '请输入有效的邮箱地址');
       return;
     }
 
     setLoading(true);
-    const result = await loginUser(email, password);
+    const result = await resetPassword(email);
     setLoading(false);
 
     if (result.success) {
-      // 登录成功，导航到主页
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Home' }],
-      });
+      Alert.alert(
+        '邮件已发送',
+        '我们已向您的邮箱发送了密码重置链接，请查收邮件并按照说明重置密码。',
+        [
+          {
+            text: '确定',
+            onPress: () => navigation.navigate('Login'),
+          },
+        ]
+      );
     } else {
-      // 登录失败，显示错误信息
-      let errorMessage = '登录失败，请重试';
+      let errorMessage = '发送重置邮件失败，请重试';
       if (result.error.includes('user-not-found')) {
         errorMessage = '该邮箱未注册';
-      } else if (result.error.includes('wrong-password')) {
-        errorMessage = '密码错误';
       } else if (result.error.includes('invalid-email')) {
         errorMessage = '邮箱格式不正确';
-      } else if (result.error.includes('invalid-credential')) {
-        errorMessage = '邮箱或密码错误';
+      } else if (result.error.includes('too-many-requests')) {
+        errorMessage = '请求过于频繁，请稍后再试';
       }
-      Alert.alert('登录失败', errorMessage);
+      Alert.alert('重置失败', errorMessage);
     }
+  };
+
+  const handleBackToLogin = () => {
+    navigation.goBack();
   };
 
   return (
@@ -74,8 +85,8 @@ export default function LoginScreen({ navigation }) {
           </View>
 
           <View style={styles.formContainer}>
-            <Text style={styles.title}>欢迎回来</Text>
-            <Text style={styles.subtitle}>登录您的账户继续使用</Text>
+            <Text style={styles.title}>忘记密码</Text>
+            <Text style={styles.subtitle}>请输入您的邮箱地址，我们将发送重置链接</Text>
 
             <View style={styles.inputWrapper}>
               <View style={styles.inputIcon}>
@@ -83,7 +94,7 @@ export default function LoginScreen({ navigation }) {
               </View>
               <TextInput
                 style={styles.input}
-                placeholder="邮箱"
+                placeholder="请输入邮箱地址"
                 placeholderTextColor="rgba(255,255,255,0.6)"
                 value={email}
                 onChangeText={setEmail}
@@ -94,25 +105,9 @@ export default function LoginScreen({ navigation }) {
               />
             </View>
 
-            <View style={styles.inputWrapper}>
-              <View style={styles.inputIcon}>
-                <Text style={styles.iconText}>🔒</Text>
-              </View>
-              <TextInput
-                style={styles.input}
-                placeholder="密码"
-                placeholderTextColor="rgba(255,255,255,0.6)"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                editable={!loading}
-              />
-            </View>
-
             <TouchableOpacity 
-              style={[styles.loginButton, loading && styles.loginButtonDisabled]} 
-              onPress={handleLogin}
+              style={[styles.resetButton, loading && styles.resetButtonDisabled]} 
+              onPress={handleResetPassword}
               disabled={loading}
             >
               <LinearGradient
@@ -124,30 +119,26 @@ export default function LoginScreen({ navigation }) {
                 {loading ? (
                   <ActivityIndicator color="#667eea" />
                 ) : (
-                  <Text style={styles.loginButtonText}>登录</Text>
+                  <Text style={styles.resetButtonText}>发送重置邮件</Text>
                 )}
               </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.forgotPassword}
-              onPress={() => navigation.navigate('ForgotPassword')}
+              style={styles.backButton}
+              onPress={handleBackToLogin}
             >
-              <Text style={styles.forgotPasswordText}>忘记密码？</Text>
+              <Text style={styles.backButtonText}>← 返回登录</Text>
             </TouchableOpacity>
+          </View>
 
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>或</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <TouchableOpacity 
-              style={styles.registerButton}
-              onPress={() => navigation.navigate('Register')}
-            >
-              <Text style={styles.registerButtonText}>创建新账户</Text>
-            </TouchableOpacity>
+          {/* 说明信息 */}
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoTitle}>重置密码说明：</Text>
+            <Text style={styles.infoText}>1. 输入您注册时使用的邮箱</Text>
+            <Text style={styles.infoText}>2. 查收邮件中的重置链接</Text>
+            <Text style={styles.infoText}>3. 点击链接设置新密码</Text>
+            <Text style={styles.infoText}>4. 使用新密码登录</Text>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -166,15 +157,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 30,
+    paddingBottom: 50,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 50,
+    marginBottom: 30,
   },
   logoCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -183,10 +175,10 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   logoText: {
-    fontSize: 50,
+    fontSize: 40,
   },
   appName: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -200,9 +192,10 @@ const styles = StyleSheet.create({
     backdropFilter: 'blur(10px)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+    marginBottom: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 8,
@@ -211,15 +204,16 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.8)',
-    marginBottom: 30,
+    marginBottom: 25,
     textAlign: 'center',
+    lineHeight: 20,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 15,
-    marginBottom: 15,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
     overflow: 'hidden',
@@ -241,7 +235,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
   },
-  loginButton: {
+  resetButton: {
     marginTop: 10,
     borderRadius: 15,
     overflow: 'hidden',
@@ -259,49 +253,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  loginButtonDisabled: {
+  resetButtonDisabled: {
     opacity: 0.7,
   },
-  loginButtonText: {
+  resetButtonText: {
     color: '#667eea',
     fontSize: 18,
     fontWeight: 'bold',
   },
-  forgotPassword: {
+  backButton: {
     alignItems: 'center',
-    marginTop: 15,
+    marginTop: 20,
   },
-  forgotPasswordText: {
-    color: '#fff',
-    fontSize: 14,
-    textDecorationLine: 'underline',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 25,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  dividerText: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    paddingHorizontal: 15,
-    fontSize: 14,
-  },
-  registerButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingVertical: 14,
-    borderRadius: 15,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  registerButtonText: {
+  backButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  infoContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 15,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+  },
+  infoText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 5,
+    paddingLeft: 10,
   },
 });

@@ -5,7 +5,8 @@ import {
   updateProfile,
   onAuthStateChanged,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth } from '../config/firebaseConfig';
 
@@ -50,6 +51,16 @@ export const logoutUser = async () => {
 // 获取当前用户
 export const getCurrentUser = () => {
   return auth.currentUser;
+};
+
+// 忘记密码 - 发送重置邮件
+export const resetPassword = async (email) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
 };
 
 // 监听认证状态变化

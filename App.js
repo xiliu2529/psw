@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import LoginScreen from './screens/LoginScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import HomeScreen from './screens/HomeScreen';
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -68,6 +69,14 @@ export default function App() {
           component={RegisterScreen}
           options={{ 
             title: '注册',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="ForgotPassword" 
+          component={ForgotPasswordScreen}
+          options={{ 
+            title: '忘记密码',
             headerShown: false,
           }}
         />
