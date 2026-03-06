@@ -1,26 +1,28 @@
-import { 
-  createUserWithEmailAndPassword, 
+import {
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
   onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence,
-  sendPasswordResetEmail
-} from 'firebase/auth';
-import { auth } from '../config/firebaseConfig';
+  sendPasswordResetEmail,
+} from "firebase/auth";
+import { auth } from "../config/firebaseConfig";
 
 // 注册新用户
 export const registerUser = async (email, password, username) => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password,
+    );
     const user = userCredential.user;
-    
+
     // 更新用户显示名称
     await updateProfile(user, {
-      displayName: username
+      displayName: username,
     });
-    
+
     return { success: true, user };
   } catch (error) {
     return { success: false, error: error.message };
@@ -30,7 +32,11 @@ export const registerUser = async (email, password, username) => {
 // 用户登录（自动保持登录状态）
 export const loginUser = async (email, password) => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password,
+    );
     // Firebase 默认会保持登录状态，无需额外配置
     return { success: true, user: userCredential.user };
   } catch (error) {
